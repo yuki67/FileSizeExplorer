@@ -9,15 +9,18 @@ from folderInfo import FolderInfo
 
 
 class FileSizeExplore():
+
     def __init__(self, dir):
         lgu.init()
         self.lookingAt = ''
 
         try:
-            self.folderInfo = shelve.open('.\\savedShelve\\fileSizeExplore')[dir]
+            self.folderInfo = shelve.open(
+                '.\\savedShelve\\fileSizeExplore')[dir]
             print('Successfully opened shelve of ' + dir)
         except KeyError:
-            print('shelve file for ' + dir + ' doesn\'t exist.\nDo you wont to make new one? [y/n]')
+            print('shelve file for ' + dir +
+                  ' doesn\'t exist.\nDo you wont to make new one? [y/n]')
             response = input()
             if response == 'y':
                 print('Making file size index. This may take some time...')
@@ -48,9 +51,11 @@ class FileSizeExplore():
                 try:
                     self.folderInfo.find(self.lookingAt).show()
                 except KeyError:
-                    print(os.path.join(self.folderInfo.name, self.lookingAt) + ' doesn\'t exist.')
+                    print(os.path.join(self.folderInfo.name,
+                                       self.lookingAt) + ' doesn\'t exist.')
                     self.lookingAt = self.lookingAt[:-len(key)]
-                    logging.debug('that was wrong. now looking at ' + self.lookingAt)
+                    logging.debug(
+                        'that was wrong. now looking at ' + self.lookingAt)
                     self.folderInfo.find(self.lookingAt).show()
         print('done')
 
@@ -65,4 +70,3 @@ class FileSizeExplore():
         return cwd
 
 FileSizeExplore('C:\\')
-

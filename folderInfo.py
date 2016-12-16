@@ -2,12 +2,12 @@
 
 import os
 import sys
-import loggingUtility as lgu
 import logging
 import shelve
 
 
 class FolderInfo():
+
     def __init__(self, dir):
         self.size = 0
         self.name = os.path.abspath(dir)
@@ -36,7 +36,7 @@ class FolderInfo():
         # logging.debug('Indexing ended : ' + name)
 
     def find(self, relPath):
-        if relPath ==  '':
+        if relPath == '':
             return self
         paths = relPath.split('\\')
         ans = self
@@ -45,7 +45,7 @@ class FolderInfo():
         return ans
 
     def save(self, dir):
-        os.makedirs('savedShelve', exist_ok = True)
+        os.makedirs('savedShelve', exist_ok=True)
         shelveFile = shelve.open('.\\savedShelve\\fileSizeExplore')
         shelveFile[dir] = self
         shelveFile.close()
