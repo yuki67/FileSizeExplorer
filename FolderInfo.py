@@ -104,7 +104,7 @@ class FolderInfo():
         temp_size = self.size
         temp_size_files = self.size_files
         temp_sub_dirs = self.sub_dirs
-        rel_path = abs_path.replace(self.name, "")
+        rel_path = abs_path.replace(self.name, "")[1:]
         # rel_path == ""のときabs_path = self.name
         if rel_path != "":
             for path in rel_path.split("\\"):
@@ -115,12 +115,10 @@ class FolderInfo():
         result = {}
         result[temp_size_files] = "Files in this directory"
         for sub_dir in temp_sub_dirs.values():
-            result[sub_dir.size] = sub_dir.name
+            result[sub_dir.size] = ".\\" + os.path.basename(sub_dir.name)
 
         print('----- Contents of ' + abs_path + '-----')
         print('Total size : ' + str(round(temp_size / 1024 ** 2, 2)) + 'MB')
         for size, name in sorted(result.items(), reverse=True):
             print("%5.2f%% %10.2fMB %s" %
-                  (self.percentage(temp_size, size),
-                   size / 1048576,  # 1024 ** 2
-                   name.replace(self.name, "")))
+                  (self.percentage(temp_size, size), size / 1048576, name))
