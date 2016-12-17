@@ -1,2 +1,3 @@
-.idea/
-.savedShelve/
+savedShelve*
+.vscode/.ropeproject
+__pycache__
