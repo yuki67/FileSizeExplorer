@@ -51,4 +51,4 @@ class FileSizeExplorer():
             self.info.show(self.cwd)
         print('done')
 
-FileSizeExplorer("C:\\")
+FileSizeExplorer("C:\\Users\\iiyuk\\Documents")

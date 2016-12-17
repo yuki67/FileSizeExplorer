@@ -120,5 +120,7 @@ class FolderInfo():
         print('----- Contents of ' + abs_path + '-----')
         print('Total size : ' + str(round(temp_size / 1024 ** 2, 2)) + 'MB')
         for size, name in sorted(result.items(), reverse=True):
-            print(str(self.percentage(temp_size, size)).rjust(5) + '% ' +
-                  str(round(size / 1024 ** 2, 2)).rjust(15) + "MB " + name.replace(self.name, "").rjust(25))
+            print("%5.2f%% %10.2fMB %s" %
+                  (self.percentage(temp_size, size),
+                   size / 1048576,  # 1024 ** 2
+                   name.replace(self.name, "")))
