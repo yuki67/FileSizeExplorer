@@ -9,14 +9,14 @@
         "showOutput": "always",
         "tasks": [
             {
-                "taskName": "run python",
+                "taskName": "run python in new window",
                 "isBuildCommand": true,
                 "args": [
                     "start", "powershell -c", "C:/Users/iiyuk/Documents/virtualenv/defaultglobal/Scripts/python.exe", "${file}"
                 ]
             },
             {
-                "taskName": "test python",
+                "taskName": "run python in integrated window",
                 "isTestCommand": true,
                 "args": [
                     "C:/Users/iiyuk/Documents/virtualenv/defaultglobal/Scripts/python.exe", "${file}"
