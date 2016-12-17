@@ -99,7 +99,7 @@ class FolderInfo():
 
     def show(self, abs_path):
         """
-        フォルダの情報を表示する。
+        abs_pathフォルダの情報を表示する。
         """
         temp_size = self.size
         temp_size_files = self.size_files
@@ -107,17 +107,18 @@ class FolderInfo():
         rel_path = abs_path.replace(self.name, "")
         # rel_path == ""のときabs_path = self.name
         if rel_path != "":
-            # 先頭の"\\"を除く
-            for path in rel_path[1:].split("\\"):
+            for path in rel_path.split("\\"):
                 temp_size = temp_sub_dirs[path].size
                 temp_size_files = temp_sub_dirs[path].size_files
                 temp_sub_dirs = temp_sub_dirs[path].sub_dirs
+
+        result = {}
+        result[temp_size_files] = "Files in this directory"
+        for sub_dir in temp_sub_dirs.values():
+            result[sub_dir.size] = sub_dir.name
+
         print('----- Contents of ' + abs_path + '-----')
         print('Total size : ' + str(round(temp_size / 1024 ** 2, 2)) + 'MB')
-        for folder in temp_sub_dirs.values():
-            print(str(self.percentage(temp_size, folder.size)).rjust(5) + '% ' +
-                  str(round(folder.size / 1024 ** 2, 2)).rjust(12) + "MB"
-                  " " + os.path.basename(folder.name))
-        print(str(self.percentage(temp_size, temp_size_files)).rjust(5) + '% ' +
-              str(round(temp_size_files / 1024 ** 2)).rjust(12) + "MB "
-              ' Files in this directory')
+        for size, name in sorted(result.items(), reverse=True):
+            print(str(self.percentage(temp_size, size)).rjust(5) + '% ' +
+                  str(round(size / 1024 ** 2, 2)).rjust(15) + "MB " + name.replace(self.name, "").rjust(25))
