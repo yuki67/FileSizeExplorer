@@ -15,10 +15,13 @@ class FileSizeExplorer():
     def __init__(self):
         self.first_cwd = os.getcwd()
         self.args = self.make_perser().parse_args()
-        self.cwd = self.clear_path(self.args.name)
-        print(self.cwd)
-        self.info = FolderInfo(self.cwd)
-        self.loop()
+        self.cwd = self.clear_path(self.args.path)
+        if not os.path.exists(self.cwd):
+            print(self.cwd + "does not exist.")
+        else:
+            print("target folder : " + self.cwd)
+            self.info = FolderInfo(self.cwd)
+            self.loop()
 
     @staticmethod
     def make_perser():
@@ -27,8 +30,8 @@ class FileSizeExplorer():
         返り値に直接parse_arg()することが前提になっている。
         """
         parser = argparse.ArgumentParser(description="Show folder size.")
-        parser.add_argument("-n", dest="name", default=".//", required=False,
-                            action="store", help="Configure folder name. " +
+        parser.add_argument("-n", dest="path", default=".//", required=False,
+                            action="store", help="Configure folder path. " +
                             "Default : \".\\\"")
         return parser
 

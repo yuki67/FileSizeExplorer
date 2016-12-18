@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-フォルダーの要素のサイズを保持する。
+フォルダーのサイズを保持する。
 """
 
 import os
@@ -10,12 +10,13 @@ import shelve
 class FolderInfo():
     """
     フォルダーについての情報を保持する。
+    関数の引数が有効なパスかどうかを判定しない。
     """
 
     def __init__(self, directory):
         self.size = 0
         self.size_files = 0
-        self.name = os.path.abspath(directory)
+        self.name = directory
         self.sub_dirs = {}
         self.construct()
 
@@ -38,18 +39,17 @@ class FolderInfo():
                         basename = os.path.basename(content)
                         self.sub_dirs[basename] = FolderInfo(content)
                         self.size += self.sub_dirs[basename].size
-
             except PermissionError:
-                pass
-                # print('Failed to open : ' + content)
+                print('Failed to open : ' + self.name)
+            except FileNotFoundError:
+                print('Failed to open : ' + self.name)
             except NotADirectoryError:
-                pass
-                # print('This files doesn\'t seem to exist : ' + content)
+                print('This file doesn\'t exist : ' + self.name)
 
     @staticmethod
     def shelve_exists(name):
         """
-        savedShelveの中にnameというkeyがあるかどうかを返す
+        cwdにsavedShelveがあり、かつその中にnameというkeyがあるかどうかを返す
         """
         if os.path.exists("savedShelve.dat"):
             slv = shelve.open('savedShelve')
@@ -73,22 +73,22 @@ class FolderInfo():
 
     def save_shelve(self, directory):
         """
-        folderInfoをshelveに保存する。
-        ディレクトリは.saved_shelve
+        あとから読み出せるようにshelveに保存する。
+        ディレクトリはdirectory\\saved_shelve
         """
         slv = shelve.open(directory + "\\savedShelve")
         slv[self.name] = self
         slv.close()
 
-    def show(self, abs_path):
+    def show(self, path):
         """
-        abs_pathフォルダの情報を表示する。
+        pathフォルダの情報(そのフォルダのサイズとサブフォルダのサイズ)を返す。
         """
         temp_size = self.size
         temp_size_files = self.size_files
         temp_sub_dirs = self.sub_dirs
-        rel_path = abs_path.replace(self.name, "")[1:]
-        # rel_path == ""のときabs_path = self.name
+        rel_path = path.replace(self.name, "")[1:]
+        # rel_path == ""のときpath = self.name
         if rel_path != "":
             for path in rel_path.split("\\"):
                 temp_size = temp_sub_dirs[path].size
