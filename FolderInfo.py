@@ -59,16 +59,6 @@ class FolderInfo():
         else:
             return False
 
-    def copy(self, src):
-        """
-        srcの内容をselfにコピーする。
-        """
-        self.size = src.size
-        self.size_files = src.size_files
-        self.name = src.name
-        self.sub_dirs = src.sub_dirs
-        return self
-
     def load_shelve(self, name):
         """
         savedShelveからnameを読みだし、selfに代入する
