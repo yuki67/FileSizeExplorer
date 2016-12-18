@@ -90,13 +90,6 @@ class FolderInfo():
         slv[self.name] = self
         slv.close()
 
-    @staticmethod
-    def percentage(total, size, digits=2):
-        """
-        selfのサイズに対するsizeの割合を返す。
-        """
-        return round(size / total * 100, digits)
-
     def show(self, abs_path):
         """
         abs_pathフォルダの情報を表示する。
@@ -117,8 +110,4 @@ class FolderInfo():
         for sub_dir in temp_sub_dirs.values():
             result[sub_dir.size] = ".\\" + os.path.basename(sub_dir.name)
 
-        print('----- Contents of ' + abs_path + '-----')
-        print('Total size : ' + str(round(temp_size / 1024 ** 2, 2)) + 'MB')
-        for size, name in sorted(result.items(), reverse=True):
-            print("%5.2f%% %10.2fMB %s" %
-                  (self.percentage(temp_size, size), size / 1048576, name))
+        return result, temp_size

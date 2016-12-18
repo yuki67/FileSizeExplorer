@@ -15,19 +15,31 @@ class FileSizeExplorer():
     def __init__(self):
         self.first_cwd = os.getcwd()
         self.args = self.make_perser().parse_args()
-        print(self.args)
-        self.info = FolderInfo(os.path.abspath(self.args.name))
-        self.cwd = os.path.abspath(self.args.name)
-        os.chdir(self.cwd)
+        self.cwd = self.clear_path(self.args.name)
+        print(self.cwd)
+        self.info = FolderInfo(self.cwd)
         self.loop()
-        self.epilogue()
 
-    def make_perser(self):
+    @staticmethod
+    def make_perser():
+        """
+        パーサーを作って、パーサーを返す。
+        返り値に直接parse_arg()することが前提になっている。
+        """
         parser = argparse.ArgumentParser(description="Show folder size.")
         parser.add_argument("-n", dest="name", default=".//", required=False,
                             action="store", help="Configure folder name. " +
                             "Default : \".\\\"")
         return parser
+
+    @staticmethod
+    def clear_path(path):
+        """
+        pathを完全なパス(曖昧さのないパス)にして返す
+        """
+        path = os.path.expanduser(path)
+        path = os.path.expandvars(path)
+        return os.path.abspath(path)
 
     def epilogue(self):
         """
@@ -40,25 +52,38 @@ class FileSizeExplorer():
         else:
             print('exiting...')
 
+    def show_info(self):
+        """
+        self.infoとself.cwdに基づいてフォルダの内容を表示する。
+        """
+        result, total_size = self.info.show(self.cwd)
+        print('----- Contents of ' + self.cwd + '-----')
+        print('Total size : ' + str(round(total_size / 1024 ** 2, 2)) + 'MB')
+        for size, name in sorted(result.items(), reverse=True):
+            print("%5.2f%% %10.2fMB %s" %
+                  (size / total_size * 100, size / 1048576, name))
+
     def loop(self):
         """
         メインループ
         """
-        self.info.show(self.cwd)
+        os.chdir(self.cwd)
+        self.show_info()
         while True:
             key = input('press q to exist.\n')
             if key == 'q':
                 break
+            key = self.clear_path(key)
             if os.path.exists(key):
-                if self.info.name <= os.path.abspath(key):
-                    self.cwd = os.path.abspath(key)
+                if self.info.name in key:
+                    self.cwd = key
                     os.chdir(self.cwd)
                 else:
-                    print("Information about " +
-                          os.path.abspath(key) + " does not exist.")
+                    print("Information about " + key + " does not exist.")
             else:
                 print("Path " + key + " does not exist.")
-            self.info.show(self.cwd)
+            self.show_info()
         print('done')
+        self.epilogue()
 
 FileSizeExplorer()
