@@ -1,3 +1,4 @@
 savedShelve*
 .vscode/.ropeproject
 __pycache__
+*.pyc
