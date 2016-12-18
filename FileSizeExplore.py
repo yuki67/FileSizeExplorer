@@ -124,6 +124,8 @@ class FileSizeExplorer():
         rel_path = path.replace(self.info.name, "")
         # rel_path == ""のときpath = self.name
         if rel_path != "":
+            if rel_path[0] == "\\":
+                rel_path = rel_path[1:]
             for path in rel_path.split("\\"):
                 temp_size = temp_sub_dirs[path].size
                 temp_size_files = temp_sub_dirs[path].size_files
@@ -132,7 +134,7 @@ class FileSizeExplorer():
         result = {}
         result[temp_size_files] = "Files in this directory"
         for sub_dir in temp_sub_dirs.values():
-            result[sub_dir.size] = ".\\" + os.path.basename(sub_dir.name)
+            result[sub_dir.size] = "\\" + os.path.basename(sub_dir.name)
 
         return result, temp_size
 
