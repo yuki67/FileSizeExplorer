@@ -12,7 +12,7 @@ class FolderInfo():
         self.sub_dirs = {}
         try:
             for content in os.listdir(self.name):
-                content = self.name + ".\\" + content
+                content = os.path.join(self.name, content)
                 if os.path.isfile(content):
                     # contentがファイルのとき
                     self.size += os.path.getsize(content)
@@ -27,4 +27,4 @@ class FolderInfo():
         except FileNotFoundError:
             print('Failed to open : ' + self.name)
         except NotADirectoryError:
-            print('This file doesn\'t exist : ' + self.name)
+            print('Failed to open : ' + self.name)

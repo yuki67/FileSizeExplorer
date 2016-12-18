@@ -30,8 +30,8 @@ class FileSizeExplorer():
         """
         pathにsavedShelveがあり、かつその中にkeyというkeyがあるかどうかを返す
         """
-        if os.path.exists(shelve_path + ".\\savedShelve.dat"):
-            slv = shelve.open(shelve_path + ".\\savedShelve")
+        if os.path.exists(os.path.join(shelve_path, "savedShelve.dat")):
+            slv = shelve.open(os.path.join(shelve_path, "savedShelve"))
             ans = key in slv.keys()
             slv.close()
             return ans
@@ -47,12 +47,12 @@ class FileSizeExplorer():
         slv.close()
         return
 
-    def save_shelve(self, directory):
+    def save_shelve(self):
         """
         あとから読み出せるようにshelveに保存する。
-       保存先はdirectory\\saved_shelve
+        保存先はself.first_cwd/saved_shelve
         """
-        slv = shelve.open(directory + "\\savedShelve")
+        slv = shelve.open(os.path.join(self.first_cwd, "savedShelve"))
         slv[self.info.name] = self.info
         slv.close()
 
@@ -63,9 +63,9 @@ class FileSizeExplorer():
         返り値に直接parse_arg()することが前提になっている。
         """
         parser = argparse.ArgumentParser(description="Show folder size.")
-        parser.add_argument("-p", dest="path", default=".//", required=False,
-                            action="store", help="Configure folder path. " +
-                            "Default : \".\\\"")
+        parser.add_argument("-p", dest="path", default="." + os.path.sep,
+                            required=False, action="store",
+                            help="Configure folder path. Default : ." + os.path.sep)
         return parser
 
     @staticmethod
@@ -80,6 +80,7 @@ class FileSizeExplorer():
     def prologue(self):
         """
         開始時のプロンプト。
+        self.infoを設定する。
         """
         print("target folder : " + self.cwd)
         while True:
@@ -96,25 +97,27 @@ class FileSizeExplorer():
                 print("No saved shelve found.")
                 break
         print("Collectiong imformation about %s."
-              " This may take some time." % self.cwd)
+              " This may take some time..." % self.cwd)
         self.info = FolderInfo(self.cwd)
-        print("You can reduce errors by running script as administrater.")
+        print("You can reduce errors by running script as administrator.")
 
     def epilogue(self):
         """
         終了時のプロンプト。
+        self.infoをセーブする。
         """
         while True:
             response = input("Do you want to save the result?[y/n] : ")
             if response == "y":
-                self.save_shelve(self.first_cwd)
+                self.save_shelve()
+                print("saving...")
                 print("Results saved.")
                 break
             elif response == "n":
                 print("exiting...")
                 break
 
-    def show(self, path):
+    def get_info(self, path):
         """
         pathフォルダの情報(そのフォルダのサイズとサブフォルダのサイズ)を返す。
         """
@@ -124,9 +127,9 @@ class FileSizeExplorer():
         rel_path = path.replace(self.info.name, "")
         # rel_path == ""のときpath = self.name
         if rel_path != "":
-            if rel_path[0] == "\\":
+            if rel_path[0] == os.path.sep:
                 rel_path = rel_path[1:]
-            for path in rel_path.split("\\"):
+            for path in rel_path.split(os.path.sep):
                 temp_size = temp_sub_dirs[path].size
                 temp_size_files = temp_sub_dirs[path].size_files
                 temp_sub_dirs = temp_sub_dirs[path].sub_dirs
@@ -134,7 +137,8 @@ class FileSizeExplorer():
         result = {}
         result[temp_size_files] = "Files in this directory"
         for sub_dir in temp_sub_dirs.values():
-            result[sub_dir.size] = "\\" + os.path.basename(sub_dir.name)
+            result[sub_dir.size] = "." + os.path.sep + \
+                os.path.basename(sub_dir.name)
 
         return result, temp_size
 
@@ -142,7 +146,7 @@ class FileSizeExplorer():
         """
         self.infoとself.cwdに基づいてフォルダの内容を表示する。
         """
-        result, total_size = self.show(self.cwd)
+        result, total_size = self.get_info(self.cwd)
         print("----- Contents of " + self.cwd + "-----")
         print("Total size : " + str(round(total_size / 1024 ** 2, 2)) + "MB")
         for size, name in sorted(result.items(), reverse=True):
@@ -156,7 +160,7 @@ class FileSizeExplorer():
         os.chdir(self.cwd)
         self.show_info()
         while True:
-            key = input("press q to exist.\n")
+            key = input("Enter directry name. (Enter q to exist.) : ")
             if key == "q":
                 break
             key = self.clear_path(key)
@@ -169,6 +173,5 @@ class FileSizeExplorer():
             else:
                 print("Path " + key + " does not exist.")
             self.show_info()
-        print("done")
 
 FileSizeExplorer()
