@@ -5,14 +5,19 @@ import os
 
 class FolderInfo():
 
-    def __init__(self, directory):
-        self.size = 0
-        self.size_files = 0
-        self.name = directory
-        self.sub_dirs = {}
+    def __init__(self, path):
+        self.path = path     # フォルダの絶対パス
+        self.size = 0        # フォルダのサイズ
+        self.size_files = 0  # フォルダにあるファイルのサイズの合計
+        self.sub_dirs = {}   # フォルダにあるフォルダのFolderInfoを入れる
         try:
-            for content in os.listdir(self.name):
-                content = os.path.join(self.name, content)
+            for content in os.listdir(self.path):
+                # この関数内ではcwdを変更しないので絶対パスに変換
+                content = os.path.join(self.path, content)
+                if os.path.islink(content):
+                    if os.path.realpath(content) != content:
+                        print("Symbolic link : " + content)
+                        continue
                 if os.path.isfile(content):
                     # contentがファイルのとき
                     self.size += os.path.getsize(content)
@@ -23,8 +28,10 @@ class FolderInfo():
                     self.sub_dirs[basename] = FolderInfo(content)
                     self.size += self.sub_dirs[basename].size
         except PermissionError:
-            print('Failed to open : ' + self.name)
+            print('Permission denied : ' + self.path)
         except FileNotFoundError:
-            print('Failed to open : ' + self.name)
+            print('File not found : ' + self.path)
         except NotADirectoryError:
-            print('Failed to open : ' + self.name)
+            print('Not a directory : ' + self.path)
+        except OSError:
+            print('Smething wrong  : ' + self.path)
