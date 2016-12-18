@@ -2,7 +2,6 @@
 import os
 import argparse
 import shelve
-import subprocess
 from FolderInfo import FolderInfo
 
 
@@ -45,7 +44,7 @@ class FileSizeExplorer():
         """
         savedShelveからkeyを読みだし、self.infoに代入する
         """
-        slv = shelve.open("savedShelve")
+        slv = shelve.open(os.path.join(self.first_cwd, "savedShelve"))
         self.info = slv[key]
         slv.close()
         return
@@ -77,9 +76,9 @@ class FileSizeExplorer():
         """
         pathを完全なパス(曖昧さのないパス)にして返す。
         """
-        path = os.path.abspath(path)
+        path = os.path.expanduser(path)
         path = os.path.expandvars(path)
-        return os.path.expanduser(path)
+        return os.path.abspath(path)
 
     def prologue(self):
         """
@@ -90,7 +89,7 @@ class FileSizeExplorer():
         while True:
             if self.shelve_exists(self.cwd, os.getcwd()):
                 response = input(
-                    "Saved shelve found. Road this shelve? [y/n] : ")
+                    "Saved shelve found. Load this shelve? [y/n] : ")
                 if response == "y":
                     print("loading...")
                     self.load_shelve(self.cwd)
@@ -111,7 +110,7 @@ class FileSizeExplorer():
         self.infoをセーブする。
         """
         while True:
-            response = input("Do you want to save the result?[y/n] : ")
+            response = input("Save result?[y/n] : ")
             if response == "y":
                 print("saving...")
                 self.save_shelve()
