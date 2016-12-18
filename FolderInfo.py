@@ -15,6 +15,7 @@ class FolderInfo():
                 # この関数内ではcwdを変更しないので絶対パスに変換
                 content = os.path.join(self.path, content)
                 if os.path.islink(content):
+                    # そのファイルそのものを指しているシンボリックリンクが(なぜか)たまにある
                     if os.path.realpath(content) != content:
                         print("Symbolic link : " + content)
                         continue
