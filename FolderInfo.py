@@ -33,4 +33,4 @@ class FolderInfo():
         except NotADirectoryError:
             print('Not a directory : ' + self.path)
         except OSError:
-            print('Smething wrong  : ' + self.path)
+            print('Smething wrong : ' + self.path)

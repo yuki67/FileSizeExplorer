@@ -23,7 +23,7 @@ class FileSizeExplorer():
             print(self.cwd + "does not exist.")
 
     @staticmethod
-    def shelve_exists(key, shelve_path):
+    def is_shelve_saved(key, shelve_path):
         """
         pathにsavedShelveがあり、かつその中にkeyというkeyがあるかどうかを返す
         """
@@ -87,7 +87,7 @@ class FileSizeExplorer():
         """
         print("target folder : " + self.cwd)
         while True:
-            if self.shelve_exists(self.cwd, os.getcwd()):
+            if self.is_shelve_saved(self.cwd, os.getcwd()):
                 response = input(
                     "Saved shelve found. Load this shelve? [y/n] : ")
                 if response == "y":
@@ -102,7 +102,6 @@ class FileSizeExplorer():
         print("Collectiong imformation about %s."
               " This may take some time..." % self.cwd)
         self.info = FolderInfo(self.cwd)
-        print("You can reduce errors by running script as administrator.")
 
     def epilogue(self):
         """
@@ -165,8 +164,7 @@ class FileSizeExplorer():
         os.chdir(self.cwd)
         self.show_info()
         while True:
-            key = input(
-                "Enter folder name. (or q to quit) : ")
+            key = input("Enter folder name. (or q to quit) : ")
             if key == "":
                 continue
             elif key == "q":
@@ -178,8 +176,13 @@ class FileSizeExplorer():
                         self.cwd = key
                         os.chdir(self.cwd)
                     else:
-                        print("Information about " + key + " does not exist.")
-                        continue
+                        print("Index information about " +
+                              key + " does not exist.")
+                        print("Making new index about %s."
+                              " This may take same time..." % key)
+                        self.info = FolderInfo(key)
+                        self.cwd = key
+                        os.chdir(self.cwd)
                 else:
                     print("Path " + key + " does not exist.")
                     continue
