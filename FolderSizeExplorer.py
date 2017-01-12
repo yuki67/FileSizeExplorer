@@ -23,29 +23,29 @@ class FileSizeExplorer():
             print(self.cwd + "does not exist.")
 
     @staticmethod
-    def is_shelve_saved(key, shelve_path):
+    def is_shelve_saved(folder, shelve_path):
         """
-        pathにsavedShelveがあり、かつその中にkeyというkeyがあるかどうかを返す
+        pathにsavedShelveがあり、かつその中にfolderを含むkeyがあるかどうかを返す
         """
-        if os.path.exists(os.path.join(shelve_path, "savedShelve.dat")):
+        # OSによってshelveの名前が違う
+        if os.path.exists(os.path.join(shelve_path, "savedShelve.dat")) or \
+                os.path.exists(os.path.join(shelve_path, "savedShelve")):
             slv = shelve.open(os.path.join(shelve_path, "savedShelve"))
-            ans = key in slv.keys()
-            slv.close()
-            return ans
-        elif os.path.exists(os.path.join(shelve_path, "savedShelve")):
-            slv = shelve.open(os.path.join(shelve_path, "savedShelve"))
-            ans = key in slv.keys()
-            slv.close()
-            return ans
-        else:
-            return False
+            for key in slv.keys():
+                if os.path.abspath(key) in folder:
+                    slv.close()
+                    return True
+            else:
+                slv.close()
+        return False
 
-    def load_shelve(self, key):
+    def load_shelve(self):
         """
-        savedShelveからkeyを読みだし、self.infoに代入する
+        savedShelveから読みだし、self.infoに代入する
+        slvにはkeyが一つしかないことに注意
         """
         slv = shelve.open(os.path.join(self.first_cwd, "savedShelve"))
-        self.info = slv[key]
+        self.info = slv[list(slv.keys())[0]]
         slv.close()
         return
 
@@ -92,7 +92,7 @@ class FileSizeExplorer():
                     "Saved shelve found. Load this shelve? [y/n] : ")
                 if response == "y":
                     print("loading...")
-                    self.load_shelve(self.cwd)
+                    self.load_shelve()
                     return
                 elif response == "n":
                     break
