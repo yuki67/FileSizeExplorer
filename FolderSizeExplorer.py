@@ -5,187 +5,130 @@ import shelve
 from FolderInfo import FolderInfo
 
 
-class FileSizeExplorer():
+def clearify_path(path):
+  """
+  return unambiguous path
+  """
+  path = os.path.expanduser(path)
+  path = os.path.expandvars(path)
+  return os.path.abspath(path)
+
+
+class CLI():
+  """
+  Command line interface main
+  """
+
+  def __init__(self):
+    self.shelve_abs_path = os.getcwd() + os.path.sep + "savedShelve"
+    self.args = self.parse_args()
+    self.cwd = clearify_path(self.args.working_directory)
+    self.folder_info = None
+    if os.path.exists(self.cwd):
+      os.chdir(self.cwd)
+      self.initialize_folderinfo()
+      self.main_loop()
+      self.epilogue()
+    else:
+      print(self.cwd + "does not exist.")
+
+  def is_shelve_ready_to_load(self):
     """
-    FolderInfoの内容を表示する。
+    check that self.shelve_abs_path exists and that the shelve has
+    self.cwd in its keys.
     """
-
-    def __init__(self):
-        self.first_cwd = os.getcwd()
-        self.args = self.make_perser().parse_args()
-        self.cwd = self.clear_path(self.args.path)
-        self.info = None
-        if os.path.exists(self.cwd):
-            self.prologue()
-            self.loop()
-            self.epilogue()
-        else:
-            print(self.cwd + "does not exist.")
-
-    @staticmethod
-    def is_shelve_saved(folder, shelve_path):
-        """
-        pathにsavedShelveがあり、かつその中にfolderを含むkeyがあるかどうかを返す
-        """
-        # OSによってshelveの名前が違う
-        if os.path.exists(os.path.join(shelve_path, "savedShelve.dat")) or \
-                os.path.exists(os.path.join(shelve_path, "savedShelve")):
-            slv = shelve.open(os.path.join(shelve_path, "savedShelve"))
-            for key in slv.keys():
-                if os.path.abspath(key) in folder:
-                    slv.close()
-                    return True
-            else:
-                slv.close()
-        return False
-
-    def load_shelve(self):
-        """
-        savedShelveから読みだし、self.infoに代入する
-        slvにはkeyが一つしかないことに注意
-        """
-        slv = shelve.open(os.path.join(self.first_cwd, "savedShelve"))
-        self.info = slv[list(slv.keys())[0]]
+    slv = shelve.open(self.shelve_abs_path)
+    if len(list(slv.keys())) == 0:
+      slv.close()
+      return False
+    for key in slv.keys():
+      if self.cwd.startswith(key):
         slv.close()
-        return
+        return True
+    slv.close()
+    return False
 
-    def save_shelve(self):
-        """
-        あとから読み出せるようにshelveに保存する。
-        保存先はself.first_cwd/saved_shelve
-        """
-        slv = shelve.open(os.path.join(self.first_cwd, "savedShelve"))
-        slv[self.info.path] = self.info
-        slv.close()
+  def save_shelve(self):
+    """
+    save self.folder_info into self.shelve_abs_path.
+    """
+    slv = shelve.open(self.shelve_abs_path)
+    slv[os.path.dirname(self.shelve_abs_path)] = self.folder_info
+    slv.close()
 
-    @staticmethod
-    def make_perser():
-        """
-        パーサーを作って、パーサーを返す。
-        返り値に直接parse_arg()することが前提になっている。
-        """
-        parser = argparse.ArgumentParser(description="Show folder size.")
-        parser.add_argument("-p", dest="path", default="." + os.path.sep,
-                            required=False, action="store",
-                            help="Configure folder path. Default : ." +
-                            os.path.sep)
-        return parser
+  def parse_args(self):
+    parser = argparse.ArgumentParser(description="Show folder size.")
+    parser.add_argument(
+        "-d",
+        dest="working_directory",
+        default="." + os.path.sep,
+        required=False,
+        action="store",
+        help="Initial working directory. Default value = ." + os.path.sep)
+    return parser.parse_args()
 
-    @staticmethod
-    def clear_path(path):
-        """
-        pathを完全なパス(曖昧さのないパス)にして返す。
-        """
-        path = os.path.expanduser(path)
-        path = os.path.expandvars(path)
-        return os.path.abspath(path)
+  def change_directory(self, directory):
+    if not os.path.exists(directory):
+      return
+    self.cwd = directory
+    os.chdir(directory)
+    if directory.startswith(self.folder_info.absolute_path):
+      return
+    print("Collectiong imformation about %s."
+          " This may take some time..." % self.cwd)
+    self.folder_info = FolderInfo(self.cwd)
 
-    def prologue(self):
-        """
-        開始時のプロンプト。
-        self.infoを設定する。
-        """
-        print("target folder : " + self.cwd)
-        while True:
-            if self.is_shelve_saved(self.cwd, os.getcwd()):
-                response = input(
-                    "Saved shelve found. Load this shelve? [y/n] : ")
-                if response == "y":
-                    print("loading...")
-                    self.load_shelve()
-                    return
-                elif response == "n":
-                    break
-            else:
-                print("No saved shelve found.")
-                break
-        print("Collectiong imformation about %s."
-              " This may take some time..." % self.cwd)
-        self.info = FolderInfo(self.cwd)
+  def initialize_folderinfo(self):
+    """
+    load FolderInfo of self.cwd into self.folder_info either by loading
+    saved one or by creating new one.
+    """
+    if self.is_shelve_ready_to_load():
+      while True:
+        response = input("Saved shelve (%s) found. Load this shelve? [y/n]: " %
+                         self.shelve_abs_path)
+        if response == "y":
+          print("loading...")
+          slv = shelve.open(self.shelve_abs_path)
+          self.folder_info = slv[self.cwd]
+          slv.close()
+          return
+        elif response == "n":
+          break
+    else:
+      print("Saved shelve (%s) not found." % self.shelve_abs_path)
+    print("Collectiong imformation about %s."
+          " This may take some time..." % self.cwd)
+    self.folder_info = FolderInfo(self.cwd)
 
-    def epilogue(self):
-        """
-        終了時のプロンプト。
-        self.infoをセーブする。
-        """
-        while True:
-            response = input("Save result?[y/n] : ")
-            if response == "y":
-                print("saving...")
-                self.save_shelve()
-                print("Results saved.")
-                print("quitting...")
-                break
-            elif response == "n":
-                print("quitting...")
-                break
+  def epilogue(self):
+    """
+    save self.folder_info if the user wants to, then exit.
+    """
+    while True:
+      response = input("Save result?[y/n] : ")
+      if response == "y":
+        print("saving...")
+        self.save_shelve()
+        print("Results saved.")
+        break
+      elif response == "n":
+        break
+    print("quitting...")
 
-    def get_info(self, path):
-        """
-        pathフォルダの情報(そのフォルダのサイズとサブフォルダのサイズ)を返す。
-        """
-        temp_size = self.info.size
-        temp_size_files = self.info.size_files
-        temp_sub_dirs = self.info.sub_dirs
-        rel_path = path[len(self.info.path):]
-        # rel_path == ""のときpath = self.info.path
-        if rel_path != "":
-            if rel_path[0] == os.path.sep:
-                rel_path = rel_path[1:]
-            for path in rel_path.split(os.path.sep):
-                temp_size = temp_sub_dirs[path].size
-                temp_size_files = temp_sub_dirs[path].size_files
-                temp_sub_dirs = temp_sub_dirs[path].sub_dirs
+  def main_loop(self):
+    self.folder_info.print(self.cwd)
+    while True:
+      key = input("Enter folder name. (or q to quit) : ")
+      if key == "":
+        continue
+      elif key == "q":
+        break
+      else:
+        key = clearify_path(key)
+        self.change_directory(key)
+      self.folder_info.print(self.cwd)
 
-        result = {}
-        result[temp_size_files] = "Files in this folder"
-        for sub_dir in temp_sub_dirs.values():
-            result[sub_dir.size] = "." + os.path.sep + \
-                os.path.basename(sub_dir.path)
 
-        return result, temp_size
-
-    def show_info(self):
-        """
-        self.infoとself.cwdに基づいてフォルダの内容を表示する。
-        """
-        result, total_size = self.get_info(self.cwd)
-        print(("Contents of " + self.cwd).center(50, "-"))
-        print("100.00%% %10.2fMB All contents" %
-              (total_size / 1048576))
-        for size, name in sorted(result.items(), reverse=True):
-            print("%6.2f%% %10.2fMB %s" %
-                  (size / total_size * 100, size / 1048576, name))
-
-    def loop(self):
-        """
-        メインループ
-        """
-        os.chdir(self.cwd)
-        self.show_info()
-        while True:
-            key = input("Enter folder name. (or q to quit) : ")
-            if key == "":
-                continue
-            elif key == "q":
-                break
-            else:
-                key = self.clear_path(key)
-                if os.path.exists(key):
-                    if self.info.path in key:
-                        self.cwd = key
-                        os.chdir(self.cwd)
-                    else:
-                        print("Index information about " +
-                              key + " does not exist.")
-                        print("Making new index about %s."
-                              " This may take same time..." % key)
-                        self.info = FolderInfo(key)
-                        self.cwd = key
-                        os.chdir(self.cwd)
-                else:
-                    print("Path " + key + " does not exist.")
-                    continue
-            self.show_info()
-
-FileSizeExplorer()
+if __name__ == "__main__":
+  CLI()
